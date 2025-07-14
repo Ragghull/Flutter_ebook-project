@@ -1,0 +1,40 @@
+name: flutter_notification
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  lottie: ^3.1.0
+  intl: ^0.19.0
+  image_picker: ^1.0.4
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: InstrumentSerif
+      fonts:
+        - asset: fonts/Instrument_Serif/InstrumentSerif-Regular.ttf
+
+  assets:
+    - assets/animations/main_scene.json
+    - assets/images/clouds.jpeg
+    - assets/images/book1.jpeg
+    - assets/images/book2.jpeg
+    - assets/images/book3.jpeg
+    - assets/images/book4.jpeg
+    - assets/images/book5.jpeg
+
