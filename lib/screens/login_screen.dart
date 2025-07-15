@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_notification/screens/home/home_screen.dart';
-import 'package:lottie/lottie.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,29 +37,19 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🎬 Lottie Animation
               Center(
-                child: Lottie.asset(
-                  'assets/animations/main_scene.json',
-                  height: 200,
-                  repeat: true,
-                  animate: true,
+                child: Text(
+                  'Hey Reader',
+                  style: TextStyle(
+                    fontFamily: 'InstrumentSerif',
+                    fontSize: 32,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-              //  Heading
-              Text(
-                'Hey Reader',
-                style: TextStyle(
-                  fontFamily: 'InstrumentSerif',
-                  fontSize: 28,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              //  Email Field
+              // ✉️ Email
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -82,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              //  Password Field
+              // 🔒 Password
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -93,8 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: _isPasswordHidden,
                   style: const TextStyle(color: Colors.black),
                   decoration: InputDecoration(
-                    contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     hintText: 'Password',
                     hintStyle: const TextStyle(
                       color: Colors.grey,
@@ -119,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              //  Login Button
+              // 🔓 Login Button
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -130,28 +119,51 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    String email = _emailController.text.trim();
                     String password = _passwordController.text.trim();
-                    String email = _emailController.text;
+
                     if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                    content: Text('Please enter a valid email'),
-                    backgroundColor: Colors.red.shade300,
-                    ),
-                    ); }
-                    else if (password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:
-                      Text('Password cannot be empty'),backgroundColor: Colors.red.shade300,),);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Please enter a valid email'),
+                        backgroundColor: Colors.red.shade300,
+                      ));
+                    } else if (password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Password cannot be empty'),
+                        backgroundColor: Colors.red.shade300,
+                      ));
                     } else if (password.length < 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:
-                      Text('Password should be atleast 6 characters'),backgroundColor: Colors.red.shade300,),);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Password should be at least 6 characters'),
+                        backgroundColor: Colors.red.shade300,
+                      ));
                     } else {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HomeScreen()),
-                      );
+                      try {
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                        );
+                      } on FirebaseAuthException catch (e) {
+                        String errorMessage = 'Login failed. Try again.';
+                        if (e.code == 'user-not-found') {
+                          errorMessage = 'No user found with that email.';
+                        } else if (e.code == 'wrong-password') {
+                          errorMessage = 'Incorrect password.';
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(errorMessage),
+                          backgroundColor: Colors.red.shade300,
+                        ));
+                      }
                     }
                   },
                   child: Text(
@@ -165,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              //  Register Button
+              // 🆕 Register Option
               const SizedBox(height: 10),
               Center(
                 child: TextButton(
@@ -173,7 +185,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const RegisterScreen()),
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     );
                   },
                   child: Text(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/book_api_service.dart';
-import '../../models/book.dart'; //  Import your Book model
+import '../../models/book.dart';
 
 class BookList extends StatefulWidget {
-  const BookList({super.key});
+  final String titleQuery;
+
+  const BookList({super.key, required this.titleQuery});
 
   @override
   State<BookList> createState() => _BookListState();
@@ -12,11 +14,19 @@ class BookList extends StatefulWidget {
 class _BookListState extends State<BookList> {
   late Future<List<Book>> booksFuture;
 
-
   @override
   void initState() {
     super.initState();
-    booksFuture = BookApiService.fetchBooks(); //  still works
+    booksFuture = BookApiService.fetchBooksByTitle(widget.titleQuery);
+  }
+
+  @override
+  void didUpdateWidget(covariant BookList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.titleQuery != widget.titleQuery) {
+      booksFuture = BookApiService.fetchBooksByTitle(widget.titleQuery);
+      setState(() {}); // Trigger rebuild
+    }
   }
 
   @override

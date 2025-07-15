@@ -4,7 +4,9 @@ import '../../services/book_api_service.dart';
 import '../../screens/home/book_detail_screen.dart';
 
 class BookPosterGrid extends StatefulWidget {
-  const BookPosterGrid({super.key});
+  final String genre; // 🔥 Genre passed from parent
+
+  const BookPosterGrid({super.key, required this.genre});
 
   @override
   State<BookPosterGrid> createState() => _BookPosterGridState();
@@ -20,9 +22,20 @@ class _BookPosterGridState extends State<BookPosterGrid> {
     _fetchBooks();
   }
 
+  @override
+  void didUpdateWidget(covariant BookPosterGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.genre != widget.genre) {
+      _fetchBooks(); // ⚡ Re-fetch when genre changes
+    }
+  }
+
   Future<void> _fetchBooks() async {
+    setState(() => _isLoading = true);
     try {
-      final books = await BookApiService.fetchBooks();
+
+      final books = await BookApiService.fetchBooksByGenre(widget.genre);
+
       setState(() {
         _books = books;
         _isLoading = false;
@@ -46,7 +59,7 @@ class _BookPosterGridState extends State<BookPosterGrid> {
       itemCount: _books.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.6, // Make book shape
+        childAspectRatio: 0.6,
         mainAxisSpacing: 20,
         crossAxisSpacing: 20,
       ),

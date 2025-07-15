@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -36,8 +38,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 100),
-
-              // Heading
               Text(
                 'Create Account',
                 style: TextStyle(
@@ -48,108 +48,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
 
-              //name field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _nameController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    hintText: 'Enter a name',
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'InstrumentSerif',
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
+              // Name
+              _buildInputField(_nameController, 'Enter a name'),
               const SizedBox(height: 20),
 
-              // Email Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _emailController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    hintText: 'Email',
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'InstrumentSerif',
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
+              // Email
+              _buildInputField(_emailController, 'Email'),
               const SizedBox(height: 20),
 
-              // Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: _isPasswordHidden,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    hintText: 'Password',
-                    hintStyle: const TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'InstrumentSerif',
-                    ),
-                    border: InputBorder.none,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordHidden = !_isPasswordHidden;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ),
+              // Password
+              _buildPasswordField(_passwordController, 'Password'),
               const SizedBox(height: 20),
 
-              // Confirm Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _confirmPasswordController,
-                  obscureText: _isPasswordHidden,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                    hintText: 'Confirm Password',
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'InstrumentSerif',
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
+              // Confirm Password
+              _buildPasswordField(_confirmPasswordController, 'Confirm Password'),
               const SizedBox(height: 30),
 
-              // Register Button
+              // Register button
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -159,34 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  onPressed: () {
-                    String email = _emailController.text.trim();
-                    String pass = _passwordController.text.trim();
-                    String confirmPass = _confirmPasswordController.text.trim();
-                    //Email validation
-                    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Please enter a valid email'),
-                          backgroundColor: Colors.red.shade300,
-                        ),
-                      ); }
-
-                    else if (pass != confirmPass) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:
-                      Text('Passwords does not match'),backgroundColor: Colors.red.shade300,),);
-                    } else if (pass.length < 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:
-                      Text('Password should be atleast 6 characters'),backgroundColor: Colors.red.shade300,),);
-                    } else {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _registerUser,
                   child: Text(
                     'Register',
                     style: TextStyle(
@@ -200,6 +88,118 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(TextEditingController controller, String hint) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(color: Colors.black),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: Colors.grey,
+            fontFamily: 'InstrumentSerif',
+          ),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(TextEditingController controller, String hint) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: _isPasswordHidden,
+        style: const TextStyle(color: Colors.black),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: Colors.grey,
+            fontFamily: 'InstrumentSerif',
+          ),
+          border: InputBorder.none,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _isPasswordHidden = !_isPasswordHidden;
+              });
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _registerUser() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty) {
+      _showError('Name cannot be empty');
+    } else if (!email.contains('@') || !email.contains('.')) {
+      _showError('Please enter a valid email');
+    } else if (password.length < 6) {
+      _showError('Password should be at least 6 characters');
+    } else if (password != confirmPassword) {
+      _showError('Passwords do not match');
+    } else {
+      try {
+        // Firebase Auth
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
+
+        // Save user data to Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'name': name,
+          'email': email,
+          'createdAt': Timestamp.now(),
+        });
+
+        // Navigate to login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          _showError('An account already exists with this email');
+        } else {
+          _showError('Registration failed. Try again.');
+        }
+      } catch (e) {
+        _showError('Something went wrong. Try again.');
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade300,
       ),
     );
   }
