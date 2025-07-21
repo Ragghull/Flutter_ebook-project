@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth import
+import 'package:firebase_auth/firebase_auth.dart'; //  Firebase Auth import
 import '../../widgets/home/top_background.dart';
 import '../../widgets/navigation/bottom_nav_bar.dart';
 
@@ -15,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _image;
   final ImagePicker _picker = ImagePicker();
-  final User? user = FirebaseAuth.instance.currentUser; // ✅ Get current user
+  final User? user = FirebaseAuth.instance.currentUser; //  Get current user
   final TextEditingController _nameController =
   TextEditingController(text: "Your Name");
 

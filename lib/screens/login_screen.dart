@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_notification/screens/home/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,9 +14,30 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordHidden = true;
-
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+
+  // ✅ Check Internet Connection
+  Future<bool> _hasInternetConnection() async {
+    var result = await Connectivity().checkConnectivity();
+    return result != ConnectivityResult.none;
+  }
+
+  // ✅ Save email to Shared Preferences
+  Future<void> _saveEmail(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_email', email);
+  }
+
+  // ✅ Show SnackBar
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade300,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFFDFD),
-              Color(0xFFF9D1AD),
-              Color(0xFF650E14),
-            ],
+            colors: [Color(0xFFFFFDFD), Color(0xFFF9D1AD), Color(0xFF650E14)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -49,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // ✉️ Email
+              // ✉️ Email Field
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -59,8 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                   style: const TextStyle(color: Colors.black),
                   decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                    contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     hintText: 'Email',
                     hintStyle: const TextStyle(
                       color: Colors.grey,
@@ -72,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 🔒 Password
+              // 🔐 Password Field
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -108,13 +127,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // 🔓 Login Button
+              // 🔘 Login Button
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 14),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -123,27 +142,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     String email = _emailController.text.trim();
                     String password = _passwordController.text.trim();
 
-                    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Please enter a valid email'),
-                        backgroundColor: Colors.red.shade300,
-                      ));
+                    if (email.isEmpty ||
+                        !email.contains('@') ||
+                        !email.contains('.')) {
+                      _showMessage('Please enter a valid email');
                     } else if (password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Password cannot be empty'),
-                        backgroundColor: Colors.red.shade300,
-                      ));
+                      _showMessage('Password cannot be empty');
                     } else if (password.length < 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Password should be at least 6 characters'),
-                        backgroundColor: Colors.red.shade300,
-                      ));
+                      _showMessage('Password should be at least 6 characters');
                     } else {
+                      bool isConnected = await _hasInternetConnection();
+                      if (!isConnected) {
+                        _showMessage('No internet connection');
+                        return;
+                      }
+
                       try {
                         await FirebaseAuth.instance.signInWithEmailAndPassword(
                           email: email,
                           password: password,
                         );
+
+                        await _saveEmail(email); // ✅ Save email
 
                         Navigator.pushReplacement(
                           context,
@@ -158,11 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         } else if (e.code == 'wrong-password') {
                           errorMessage = 'Incorrect password.';
                         }
-
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(errorMessage),
-                          backgroundColor: Colors.red.shade300,
-                        ));
+                        _showMessage(errorMessage);
                       }
                     }
                   },
@@ -177,8 +193,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // 🆕 Register Option
               const SizedBox(height: 10),
+
+              // 🔗 Register
               Center(
                 child: TextButton(
                   onPressed: () {
